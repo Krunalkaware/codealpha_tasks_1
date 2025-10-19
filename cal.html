@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Modern Calculator</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configure Tailwind for Dark Mode -->
+    <script>
+        tailwind.config = {
+            // Enable dark mode based on a 'dark' class applied to the root element (body or html)
+            darkMode: 'class', 
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Consolas', 'monospace'],
+                    },
+                    colors: {
+                        // Define simple accent color
+                        'calc-accent': '#2dd4bf', // Teal 400
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styles for button grid and focus/active states */
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem; /* 12px */
+        }
+        
+        /* Style for the main display screen */
+        #display-screen {
+            min-height: 7rem; 
+            word-wrap: break-word;
+            word-break: break-all;
+            padding: 1.5rem;
+            text-align: right;
+            transition: all 0.3s ease;
+        }
+
+        /* Base button styles */
+        .calc-button {
+            border-radius: 0.75rem; /* rounded-lg */
+            padding: 1rem;
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 600; /* font-semibold */
+            transition: transform 0.1s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        }
+        
+        /* Interactive effect */
+        .calc-button:active {
+            transform: scale(0.98);
+            box-shadow: none;
+        }
+
+        /* Dark Mode Button Specifics */
+        .dark .calc-button {
+            box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1);
+        }
+
+    </style>
+</head>
+<!-- Initial state is dark mode -->
+<body class="dark bg-gray-100 dark:bg-gray-900 transition-colors duration-500 flex items-center justify-center min-h-screen p-4 font-sans">
+
+    <!-- Calculator Container -->
+    <div class="w-full max-w-sm bg-white dark:bg-gray-800 shadow-xl rounded-xl overflow-hidden transition-colors duration-500">
+        
+        <!-- Calculator Title Bar and Theme Toggle -->
+        <div class="p-4 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
+            <h1 class="text-xl font-bold tracking-tight transition-colors duration-500">
+                Calculator
+            </h1>
+            <button id="theme-toggle" class="p-2 rounded-full text-gray-500 hover:text-calc-accent transition-colors duration-300 focus:outline-none" aria-label="Toggle Theme">
+                <!-- Sun/Moon Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Display Screen -->
+        <div id="display-screen" class="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-sans text-5xl flex flex-col justify-end">
+            <!-- Previous operand and operation -->
+            <div id="previous-operand" class="text-gray-400 dark:text-gray-400 text-xl font-medium"></div>
+            <!-- Current operand (result) -->
+            <div id="current-operand" class="transition-colors duration-500">0</div>
+        </div>
+
+        <!-- Buttons Grid -->
+        <div class="p-4 calculator-grid bg-white dark:bg-gray-800 transition-colors duration-500">
+
+            <!-- Row 1 -->
+            <!-- AC/Clear Button - Red for clear function -->
+            <button data-clear class="calc-button bg-red-100 text-red-600 col-span-2 hover:bg-red-200 dark:bg-red-800 dark:text-white dark:hover:bg-red-700">AC</button>
+            
+            <!-- DEL Button - Operator color scheme -->
+            <button data-delete class="calc-button bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-calc-accent dark:hover:bg-gray-600">DEL</button>
+            
+            <!-- Divide Operator - Accent color -->
+            <button data-operation="÷" class="calc-button bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-calc-accent dark:hover:bg-gray-600">÷</button>
+
+            <!-- Row 2 (Numbers 7, 8, 9, Multiply) -->
+            <button data-number="7" class="calc-button bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">7</button>
+            <button data-number="8" class="calc-button bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">8</button>
+            <button data-number="9" class="calc-button bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">9</button>
+            <button data-operation="×" class="calc-button bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-calc-accent dark:hover:bg-gray-600">×</button>
+
+            <!-- Row 3 (Numbers 4, 5, 6, Subtract) -->
+            <button data-number="4" class="calc-button bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">4</button>
+            <button data-number="5" class="calc-button bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">5</button>
+            <button data-number="6" class="calc-button bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">6</button>
+            <button data-operation="-" class="calc-button bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-calc-accent dark:hover:bg-gray-600">−</button>
+
+            <!-- Row 4 (Numbers 1, 2, 3, Add) -->
+            <button data-number="1" class="calc-button bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">1</button>
+            <button data-number="2" class="calc-button bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">2</button>
+            <button data-number="3" class="calc-button bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">3</button>
+            <button data-operation="+" class="calc-button bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-calc-accent dark:hover:bg-gray-600">+</button>
+
+            <!-- Row 5 (0, ., Equals) -->
+            <button data-number="0" class="calc-button col-span-2 bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">0</button>
+            <button data-number="." class="calc-button bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">.</button>
+            
+            <!-- Equals Button (Primary Accent) -->
+            <button data-equals class="calc-button bg-calc-accent text-white font-extrabold shadow-lg hover:bg-teal-600 dark:bg-calc-accent dark:hover:bg-teal-600">
+                =
+            </button>
+        </div>
+        
+    </div>
+    
+    <script>
+        /**
+         * Calculator Class
+         * Manages the state and logic for the calculator operations.
+         */
+        class Calculator {
+            constructor(previousOperandTextElement, currentOperandTextElement) {
+                this.previousOperandTextElement = previousOperandTextElement;
+                this.currentOperandTextElement = currentOperandTextElement;
+                this.clear();
+            }
+
+            // Resets all state variables
+            clear() {
+                this.currentOperand = '0';
+                this.previousOperand = '';
+                this.operation = undefined;
+                this.updateDisplay();
+            }
+
+            // Removes the last digit from the current operand
+            delete() {
+                this.currentOperand = this.currentOperand.toString().slice(0, -1);
+                if (this.currentOperand === '') {
+                    this.currentOperand = '0';
+                }
+            }
+
+            // Appends a number to the current operand
+            appendNumber(number) {
+                if (number === '.' && this.currentOperand.includes('.')) return;
+                
+                // If the current operand is '0', replace it unless the new input is '.'
+                if (this.currentOperand === '0' && number !== '.') {
+                    this.currentOperand = number.toString();
+                } else {
+                    this.currentOperand = this.currentOperand.toString() + number.toString();
+                }
+            }
+
+            // Selects an operation and moves the current operand to the previous slot
+            chooseOperation(operation) {
+                if (this.currentOperand === '0' && this.previousOperand === '') return;
+                
+                // If there is already a previous operand, compute the result before setting the new operation
+                if (this.previousOperand !== '') {
+                    this.compute();
+                }
+
+                this.operation = operation;
+                this.previousOperand = this.currentOperand;
+                this.currentOperand = '0';
+            }
+
+            // Performs the calculation based on the stored operation
+            compute() {
+                let computation;
+                const prev = parseFloat(this.previousOperand);
+                const current = parseFloat(this.currentOperand);
+                
+                // Check if either operand is empty or invalid
+                if (isNaN(prev) || isNaN(current)) return;
+
+                switch (this.operation) {
+                    case '+':
+                        computation = prev + current;
+                        break;
+                    case '-':
+                        computation = prev - current;
+                        break;
+                    case '×':
+                        computation = prev * current;
+                        break;
+                    case '÷':
+                        if (current === 0) {
+                            // Custom error handling
+                            computation = 'Error: Div by 0';
+                        } else {
+                            computation = prev / current;
+                        }
+                        break;
+                    default:
+                        return; // Exit if no operation is set
+                }
+
+                // Handle error message
+                if (typeof computation === 'string' && computation.startsWith('Error')) {
+                    this.currentOperand = computation;
+                    this.previousOperand = '';
+                    this.operation = undefined;
+                    return;
+                }
+
+                // Fix floating point issues and limit display length
+                this.currentOperand = Math.round(computation * 10000000) / 10000000;
+                this.operation = undefined;
+                this.previousOperand = '';
+            }
+
+            // Formats the number for display (adds commas for large numbers)
+            getDisplayNumber(number) {
+                // Return error strings directly
+                if (typeof number === 'string' && number.startsWith('Error')) return number;
+
+                const stringNumber = number.toString();
+                const integerDigits = parseFloat(stringNumber.split('.')[0]);
+                const decimalDigits = stringNumber.split('.')[1];
+                let integerDisplay;
+
+                if (isNaN(integerDigits)) {
+                    integerDisplay = '';
+                } else {
+                    // Use localeString to handle commas
+                    integerDisplay = integerDigits.toLocaleString('en', { maximumFractionDigits: 0 });
+                }
+
+                if (decimalDigits != null) {
+                    return `${integerDisplay}.${decimalDigits}`;
+                } else {
+                    return integerDisplay;
+                }
+            }
+
+            // Updates the visible display on the screen
+            updateDisplay() {
+                // If the current operand is an error message, show it directly
+                if (this.currentOperand.toString().startsWith('Error')) {
+                    this.currentOperandTextElement.innerText = this.currentOperand;
+                    this.previousOperandTextElement.innerText = '';
+                    return;
+                }
+
+                this.currentOperandTextElement.innerText = this.getDisplayNumber(this.currentOperand);
+
+                if (this.operation != null) {
+                    this.previousOperandTextElement.innerText = 
+                        `${this.getDisplayNumber(this.previousOperand)} ${this.operation}`;
+                } else {
+                    this.previousOperandTextElement.innerText = '';
+                }
+            }
+        }
+
+
+        // --- DOM Element Selection and Initialization ---
+
+        const numberButtons = document.querySelectorAll('[data-number]');
+        const operationButtons = document.querySelectorAll('[data-operation]');
+        const equalsButton = document.querySelector('[data-equals]');
+        const deleteButton = document.querySelector('[data-delete]');
+        const clearButton = document.querySelector('[data-clear]');
+        const previousOperandTextElement = document.getElementById('previous-operand');
+        const currentOperandTextElement = document.getElementById('current-operand');
+        const themeToggle = document.getElementById('theme-toggle');
+
+        const calculator = new Calculator(previousOperandTextElement, currentOperandTextElement);
+
+
+        // --- Theme Toggle Logic ---
+        function setIcon(isDark) {
+            const svgIcon = themeToggle.querySelector('svg');
+            if (isDark) {
+                // Set to Sun icon (for light mode toggle)
+                svgIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />';
+            } else {
+                // Set to Moon icon (for dark mode toggle)
+                svgIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />';
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark');
+            setIcon(isDark);
+        }
+
+        // Initialize icon state
+        setIcon(document.body.classList.contains('dark'));
+        themeToggle.addEventListener('click', toggleTheme);
+
+
+        // --- Event Listeners for Button Clicks ---
+
+        numberButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                calculator.appendNumber(button.innerText);
+                calculator.updateDisplay();
+            });
+        });
+
+        operationButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                calculator.chooseOperation(button.innerText);
+                calculator.updateDisplay();
+            });
+        });
+
+        equalsButton.addEventListener('click', button => {
+            calculator.compute();
+            calculator.updateDisplay();
+        });
+
+        clearButton.addEventListener('click', button => {
+            calculator.clear();
+            calculator.updateDisplay();
+        });
+
+        deleteButton.addEventListener('click', button => {
+            calculator.delete();
+            calculator.updateDisplay();
+        });
+
+
+        // --- Keyboard Support ---
+
+        window.addEventListener('keydown', (e) => {
+            const key = e.key;
+
+            // Handle numbers and decimal point
+            if ((key >= '0' && key <= '9') || key === '.') {
+                // Find the corresponding button and simulate a click for visual feedback
+                const button = document.querySelector(`[data-number="${key}"]`);
+                if (button) button.click();
+
+                calculator.appendNumber(key);
+                calculator.updateDisplay();
+            }
+
+            // Handle operators
+            if (key === '+' || key === '-' || key === '*' || key === '/') {
+                // Map '*' to '×' and '/' to '÷' for display consistency
+                let operation = key;
+                if (key === '*') operation = '×';
+                if (key === '/') operation = '÷';
+                
+                // Find the corresponding button and simulate a click
+                const button = document.querySelector(`[data-operation="${operation}"]`) || (key === '*' ? document.querySelector('[data-operation="×"]') : document.querySelector('[data-operation="÷"]'));
+                if (button) button.click();
+
+                calculator.chooseOperation(operation);
+                calculator.updateDisplay();
+            }
+
+            // Handle Enter/Equals
+            if (key === 'Enter' || key === '=') {
+                e.preventDefault(); 
+                document.querySelector('[data-equals]').click();
+            }
+
+            // Handle Delete/Backspace
+            if (key === 'Backspace') {
+                document.querySelector('[data-delete]').click();
+            }
+
+            // Handle Clear (Escape key is common for reset)
+            if (key === 'Escape') {
+                document.querySelector('[data-clear]').click();
+            }
+        });
+
+    </script>
+</body>
+</html>
